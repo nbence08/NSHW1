@@ -94,20 +94,16 @@ if(msg.decode("ascii") != 'Give me your neptun code: '):
     raise ValueError("ERROR: message must be \"Give me your neptun code: \"")
 
 sock.send(neptunCoded)
-print(sock.recv(100).decode("ascii"))
 msg=sock.recv(1000).decode("ascii")
 
 firstPart = re.split("equations!", msg)[0]
 numOfEqs = int(re.split("I will send you", firstPart)[1])
-
-print(numOfEqs)
 
 eq = msg.split("\n")[2]
 
 result = evaluate(eq)
 msg = str(result).encode("ascii")
 sock.send(msg)
-print(eq + " " + str(result))
 
 for i in range(1, numOfEqs):
     eq = sock.recv(1000).decode("ascii")
@@ -120,9 +116,7 @@ for i in range(1, numOfEqs):
 lastRes = str(msg.decode("ascii"))
 
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 
 concat = neptun+lastRes
 concat = concat.encode("ascii")
@@ -132,20 +126,15 @@ hash = sha1Hash(concat)
 sock.send(hash.encode("ascii"))
 
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 
 powValue = proofOfWork(concat.decode("ascii"))
 sock.send(powValue.encode("ascii"))
 
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 msg=sock.recv(1000).decode("ascii")
-print(msg)
 
 
 url = re.search(r"http://(\d{1,3}\.){3}(\d{1,3})", str(msg))[0]
