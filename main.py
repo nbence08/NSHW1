@@ -72,7 +72,47 @@ def proofOfWork(stringValue):
                     carry = 0
     return stringValue+raw
 
+def neptunHandshake():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host, commPort))
+    msg = sock.recv(30)
 
+    if (msg.decode("ascii") != 'Give me your neptun code: '):
+        raise ValueError("ERROR: message must be \"Give me your neptun code: \"")
+
+    sock.send(neptunCoded)
+    sock.recv(1000).decode("ascii")
+    return sock
+
+def handleEquations(sock):
+    msg = sock.recv(1000).decode("ascii")
+
+    firstPart = re.split("equations!", msg)[0]
+    numOfEqs = int(re.split("I will send you", firstPart)[1])
+
+    eq = msg.split("\n")[2]
+
+    result = evaluate(eq)
+    msg = str(result).encode("ascii")
+    sock.send(msg)
+
+    for i in range(1, numOfEqs):
+        eq = sock.recv(1000).decode("ascii")
+
+        result = evaluate(eq)
+        msg = str(result).encode("ascii")
+        sock.send(msg)
+        print(eq + " " + str(result))
+
+    return str(msg.decode("ascii"))
+
+
+def sendHash(value):
+    sock.recv(1000).decode("ascii")
+    sock.recv(1000).decode("ascii")
+
+    hash = sha1Hash(value)
+    sock.send(hash.encode("ascii"))
 
 parser = argparse.ArgumentParser(description='NetSec HW')
 parser.add_argument("-n", "--neptun", type=str, nargs=1, help="Neptun code to run the app for")
@@ -86,44 +126,13 @@ neptunCoded = neptun.encode("ascii")
 
 knockPorts(ports)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((host, commPort))
-msg = sock.recv(30)
+sock = neptunHandshake()
 
-if(msg.decode("ascii") != 'Give me your neptun code: '):
-    raise ValueError("ERROR: message must be \"Give me your neptun code: \"")
-
-sock.send(neptunCoded)
-msg=sock.recv(1000).decode("ascii")
-
-firstPart = re.split("equations!", msg)[0]
-numOfEqs = int(re.split("I will send you", firstPart)[1])
-
-eq = msg.split("\n")[2]
-
-result = evaluate(eq)
-msg = str(result).encode("ascii")
-sock.send(msg)
-
-for i in range(1, numOfEqs):
-    eq = sock.recv(1000).decode("ascii")
-
-    result = evaluate(eq)
-    msg = str(result).encode("ascii")
-    sock.send(msg)
-    print(eq + " " + str(result))
-
-lastRes = str(msg.decode("ascii"))
-
-msg=sock.recv(1000).decode("ascii")
-msg=sock.recv(1000).decode("ascii")
-
-concat = neptun+lastRes
+lastRes = handleEquations(sock)
+concat = neptun + lastRes
 concat = concat.encode("ascii")
 
-hash = sha1Hash(concat)
-
-sock.send(hash.encode("ascii"))
+sendHash(concat)
 
 msg=sock.recv(1000).decode("ascii")
 
